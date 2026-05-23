@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlas Blok 6E - Simulasi Ujian & History Akses</title>
+    <style>
+        :root {
+            --primary: #1a365d;
+            --secondary: #2c5282;
+            --accent: #ed8936;
+            --success: #38a169;
+            --danger: #e53e3e;
+            --warning: #d69e2e;
+            --info: #3182ce;
+            --light: #f7fafc;
+            --dark: #1a202c;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            color: var(--dark);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* ===== LOGIN SCREEN ===== */
+        .login-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+
+        .login-screen.hidden { opacity: 0; pointer-events: none; }
+
+        .login-box {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            width: 90%;
+            max-width: 420px;
+            text-align: center;
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .login-box .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .login-box h1 {
+            color: var(--primary);
+            font-size: 1.6rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-box p.subtitle {
+            color: #718096;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-info {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: #4a5568;
+            text-align: left;
+        }
+
+        .login-info strong {
+            color: var(--primary);
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.9rem;
+            margin-top: 0.8rem;
+            display: none;
+        }
+
+        /* ===== HEADER ===== */
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.2rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .app-header h1 {
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.25);
+            border: none;
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-left: 0.5rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        /* ===== NAV ===== */
+        .nav-container {
+            background: white;
+            padding: 0.8rem 1rem;
+            position: sticky;
+            top: 60px;
+            z-index: 99;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .nav-scroll {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.3rem;
+        }
+
+        .nav-btn {
+            padding: 0.6rem 1.1rem;
+            border: none;
+            border-radius: 25px;
+            background: #edf2f7;
+            color: var(--dark);
+            cursor: pointer;
+            white-space: nowrap;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* ===== SECTIONS ===== */
+        .section {
+            display: none;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            animation: fadeIn 0.5s;
+        }
+
+        .section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            color: var(--primary);
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 4px solid var(--accent);
+            display: inline-block;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 1.5rem;
+            margin-bottom: 1.2rem;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--accent);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            background: var(--light);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .card-body {
+            color: #4a5568;
+            font-size: 0.95rem;
+        }
+
+        .card-body ul { margin-left: 1.2rem; margin-top: 0.5rem; }
+        .card-body li { margin-bottom: 0.4rem; }
+
+        /* ===== QUIZ ENGINE ===== */
+        .quiz-intro {
+            background: linear-gradient(135deg, #e6fffa 0%, #ebf8ff 100%);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            border: 2px solid #81e6d9;
+        }
+
+        .quiz-intro h2 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .quiz-intro p {
+            color: #4a5568;
+            margin-bottom: 1rem;
+        }
+
+        .quiz-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 1rem 0;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-box .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .stat-box .label {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .btn-start-quiz {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 1rem 3rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+
+        .btn-start-quiz:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(72, 187, 120, 0.4);
+        }
+
+        /* Timer */
+        .quiz-timer {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: var(--danger);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            z-index: 98;
+            box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
+            display: none;
+        }
+
+        .quiz-timer.warning {
+            background: var(--warning);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Quiz Card */
+        .quiz-card {
+            background: white;
+            border-radius: 18px;
+            padding: 1.8rem;
+            margin-bottom: 1.2rem;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .quiz-card.active { display: block; animation: fadeIn 0.4s; }
+
+        .quiz-progress {
+            background: #edf2f7;
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .quiz-progress-bar {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .quiz-question-number {
+            display: inline-block;
+            background: var(--secondary);
+            color: white;
+            padding: 0.3rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+        }
+
+        .quiz-question-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 1.2rem;
+            line-height: 1.6;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 0.7rem;
+        }
+
+        .quiz-option {
+            padding: 1rem 1.2rem;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--secondary);
+            background: #ebf8ff;
+            transform: translateX(5px);
+        }
+
+        .quiz-option.selected {
+            border-color: var(--secondary);
+            background: #bee3f8;
+        }
+
+        .quiz-option.correct {
+            border-color: var(--success);
+            background: #c6f6d5;
+        }
+
+        .quiz-option.wrong {
+            border-color: var(--danger);
+            background: #fed7d7;
+        }
+
+        .quiz-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+
+        .btn-nav {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-prev { background: #edf2f7; color: var(--dark); }
+        .btn-next { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-finish { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; }
+
+        .btn-nav:hover { transform: translateY(-2px); }
+        .btn-nav:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Result Screen */
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .result-screen.active { display: block; animation: fadeIn 0.5s; }
+
+        .result-score-circle {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .result-score-circle .score-number {
+            font-size: 3rem;
+            font-weight: 700;
+        }
+
+        .result-score-circle .score-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            max-width: 500px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .result-detail-box {
+            background: white;
+            padding: 1rem;
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .result-detail-box .number {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .result-detail-box .label {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .result-detail-box.correct .number { color: var(--success); }
+        .result-detail-box.wrong .number { color: var(--danger); }
+        .result-detail-box.empty .number { color: var(--warning); }
+
+        .result-message {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .result-message.excellent { color: var(--success); }
+        .result-message.good { color: var(--info); }
+        .result-message.pass { color: var(--warning); }
+        .result-message.fail { color: var(--danger); }
+
+        .btn-review {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .btn-review:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(237, 137, 54, 0.4);
+        }
+
+        /* Review Section */
+        .review-card {
+            background: white;
+            border-radius: 18px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--danger);
+        }
+
+        .review-card.correct { border-left-color: var(--success); }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .review-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .review-status.correct { background: #c6f6d5; color: #22543d; }
+        .review-status.wrong { background: #fed7d7; color: #742a2a; }
+
+        .review-answer {
+            background: #f0fff4;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 0.8rem 0;
+            border-left: 3px solid var(--success);
+        }
+
+        .review-explanation {
+            background: #ebf8ff;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 0.8rem;
+            border-left: 3px solid var(--secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ===== HISTORY / ADMIN PANEL ===== */
+        .admin-panel {
+            background: white;
+            border-radius: 18px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .admin-panel h2 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .history-table-wrap {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .history-table th {
+            background: var(--primary);
+            color: white;
+            padding: 0.8rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .history-table td {
+            padding: 0.7rem 0.8rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .history-table tr:nth-child(even) { background: #f7fafc; }
+        .history-table tr:hover { background: #edf2f7; }
+
+        .badge-role {
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .badge-admin { background: #fed7d7; color: #742a2a; }
+        .badge-user { background: #c6f6d5; color: #22543d; }
+        .badge-guest { background: #feebc8; color: #744210; }
+
+        .btn-clear {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .btn-export {
+            background: var(--info);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-left: 0.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.2rem;
+            border-radius: 14px;
+            text-align: center;
+        }
+
+        .stats-card h3 {
+            font-size: 2rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .stats-card p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .login-box { padding: 1.5rem; }
+            .app-header h1 { font-size: 1rem; }
+            .user-badge { display: none; }
+            .quiz-stats { gap: 1rem; }
+            .result-details { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            .login-screen, .app-header, .nav-container, .quiz-timer { display: none !important; }
+            .section { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== LOGIN SCREEN ==================== -->
+<div class="login-screen" id="loginScreen">
+    <div class="login-box">
+        <div class="icon">🧠</div>
+        <h1>Atlas Blok 6E</h1>
+        <p class="subtitle">Neurologi & Psikiatri - Simulasi Ujian</p>
+
+        <div class="input-group">
+            <label>👤 Username</label>
+            <input type="text" id="loginUser" placeholder="Masukkan username">
+        </div>
+
+        <div class="input-group">
+            <label>🔑 Password</label>
+            <input type="password" id="loginPass" placeholder="Masukkan password">
+        </div>
+
+        <div class="input-group">
+            <label>🎓 Login Sebagai</label>
+            <select id="loginRole">
+                <option value="mahasiswa">Mahasiswa</option>
+                <option value="admin">Administrator</option>
+                <option value="tamu">Tamu (Guest)</option>
+            </select>
+        </div>
+
+        <button class="btn btn-primary" onclick="doLogin()">🔓 Masuk</button>
+        <div class="error-msg" id="loginError">Username atau password salah!</div>
+
+        <div class="login-info">
+            <strong>📋 Akun Default:</strong><br>
+            • Admin: <code>admin</code> / <code>admin123</code><br>
+            • Mahasiswa: <code>mhs1</code> / <code>pass123</code><br>
+            • Tamu: <code>guest</code> / <code>guest123</code><br><br>
+            <small>💡 Data akses tersimpan otomatis di panel History</small>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== APP HEADER ==================== -->
+<div class="app-header" id="appHeader" style="display:none;">
+    <h1>🧠 Atlas Blok 6E</h1>
+    <div style="display:flex;align-items:center;">
+        <span class="user-badge" id="userBadge">👤 Guest</span>
+        <button class="logout-btn" onclick="doLogout()">🚪 Keluar</button>
+    </div>
+</div>
+
+<!-- ==================== NAVIGATION ==================== -->
+<div class="nav-container" id="navContainer" style="display:none;">
+    <div class="nav-scroll">
+        <button class="nav-btn active" onclick="showSection('dashboard')">📊 Beranda</button>
+        <button class="nav-btn" onclick="showSection('materi')">📚 Materi</button>
+        <button class="nav-btn" onclick="showSection('simulasi')">📝 Simulasi Ujian</button>
+        <button class="nav-btn" onclick="showSection('history')">📈 History</button>
+        <button class="nav-btn admin-only" onclick="showSection('admin')">🔒 Admin Panel</button>
+    </div>
+</div>
+
+<!-- ==================== TIMER ==================== -->
+<div class="quiz-timer" id="quizTimer">⏱️ 60:00</div>
+
+<!-- ==================== SECTION: DASHBOARD ==================== -->
+<div id="dashboard" class="section active">
+    <h2 class="section-title">📊 Dashboard</h2>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-icon">👋</span>
+            <span class="card-title">Selamat Datang, <span id="welcomeName">Dokter Muda</span>!</span>
+        </div>
+        <div class="card-body">
+            <p>Selamat datang di <strong>Atlas Blok 6E</strong> — platform pembelajaran lengkap untuk Neurologi & Psikiatri. Di sini kamu bisa:</p>
+            <ul>
+                <li>📚 <strong>Belajar Materi</strong> — 16 topik lengkap dengan pembahasan soal</li>
+                <li>📝 <strong>Simulasi Ujian</strong> — Ujian timed dengan 40 soal acak dan scoring otomatis</li>
+                <li>❌ <strong>Review Salah</strong> — Lihat pembahasan soal yang kamu jawab salah</li>
+                <li>📈 <strong>History</strong> — Lacak progress dan riwayat ujianmu</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stats-card">
+            <h3 id="statTotalSoal">89</h3>
+            <p>Total Soal Tersedia</p>
+        </div>
+        <div class="stats-card">
+            <h3 id="statSimulasi">0</h3>
+            <p>Simulasi Ujian Dilakukan</p>
+        </div>
+        <div class="stats-card">
+            <h3 id="statAvgScore">-</h3>
+            <p>Rata-rata Nilai Terakhir</p>
+        </div>
+        <div class="stats-card">
+            <h3 id="statBestScore">-</h3>
+            <p>Nilai Tertinggi</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-icon">🎯</span>
+            <span class="card-title">Tips Sukses Blok 6E</span>
+        </div>
+        <div class="card-body">
+            <ol>
+                <li><strong>Pelajari Materi Dulu</strong> — Pahami konsep sebelum mengerjakan soal</li>
+                <li><strong>Gunakan Simulasi Ujian</strong> — Latih diri dengan kondisi seperti ujian sungguhan</li>
+                <li><strong>Review Soal Salah</strong> — Fokus pada area yang masih lemah</li>
+                <li><strong>Hafal Mnemonik</strong> — Gunakan kata kunci untuk mengingat konsep</li>
+                <li><strong>Ulangi Simulasi</strong> — Semakin sering latihan, semakin tinggi nilaimu</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== SECTION: MATERI ==================== -->
+<div id="materi" class="section">
+    <h2 class="section-title">📚 Materi Pembelajaran</h2>
+    <p style="margin-bottom:1rem;color:#718096;">Pilih topik untuk mempelajari materi dan pembahasan soal:</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;">
+        <div class="card" style="cursor:pointer;" onclick="alert('Materi lengkap tersedia di versi sebelumnya. Silakan buka file Atlas_Blok_6E_Versi_Mudah.html untuk materi detail.')">
+            <div class="card-header"><span class="card-icon">🩸</span><span class="card-title">Stroke & Vaskular</span></div>
+            <div class="card-body">4 soal terbahas lengkap</div>
+        </div>
+        <div class="card" style="cursor:pointer;" onclick="alert('Materi lengkap tersedia di versi sebelumnya.')">
+            <div class="card-header"><span class="card-icon">⚡</span><span class="card-title">Epilepsi & Kejang</span></div>
+            <div class="card-body">5 soal terbahas lengkap</div>
+        </div>
+        <div class="card" style="cursor:pointer;" onclick="alert('Materi lengkap tersedia di versi sebelumnya.')">
+            <div class="card-header"><span class="card-icon">🌀</span><span class="card-title">Vertigo & Keseimbangan</span></div>
+            <div class="card-body">6 soal terbahas lengkap</div>
+        </div>
+        <div class="card" style="cursor:pointer;" onclick="alert('Materi lengkap tersedia di versi sebelumnya.')">
+            <div class="card-header"><span class="card-icon">🦠</span><span class="card-title">Infeksi SSP</span></div>
+            <div class="card-body">5 soal terbahas lengkap</div>
+        </div>
+        <div class="card" style="cursor:pointer;" onclick="alert('Materi lengkap tersedia di versi sebelumnya.')">
+            <div class="card-header"><span class="card-icon">🎯</span><span class="card-title">Parkinson</span></div>
+            <div class="card-body">3 soal terbahas lengkap</div>
+        </div>
+        <div class="card" style="cursor:pointer;" onclick="alert('Materi lengkap tersedia di versi sebelumnya.')">
+            <div class="card-header"><span class="card-icon">🧬</span><span class="card-title">Tumor Otak</span></div>
+            <div class="card-body">3 soal terbahas lengkap</div>
+        </div>
+        <div class="card" style="cursor:pointer;" onclick="alert('Materi lengkap tersedia di versi sebelumnya.')">
+            <div class="card-header"><span class="card-icon">🤕</span><span class="card-title">Trauma Kepala</span></div>
+            <div class="card-body">3 soal terbahas lengkap</div>
+        </div>
+        <div class="card" style="cursor:pointer;" onclick="alert('Materi lengkap tersedia di versi sebelumnya.')">
+            <div class="card-header"><span class="card-icon">🧩</span><span class="card-title">Psikiatri</span></div>
+            <div class="card-body">10+ soal terbahas lengkap</div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:1rem;background:linear-gradient(135deg,#fffaf0,#feebc8);border-color:var(--warning);">
+        <div class="card-body" style="text-align:center;">
+            <p>📖 <strong>Materi lengkap dengan pembahasan detail</strong> tersedia di file <code>Atlas_Blok_6E_Versi_Mudah.html</code></p>
+            <p style="font-size:0.9rem;color:#718096;">File ini fokus pada fitur Simulasi Ujian, Review, dan History Akses</p>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== SECTION: SIMULASI UJIAN ==================== -->
+<div id="simulasi" class="section">
+    <h2 class="section-title">📝 Simulasi Ujian</h2>
+
+    <!-- Intro -->
+    <div class="quiz-intro" id="quizIntro">
+        <h2>🎯 Ujian Simulasi Blok 6E</h2>
+        <p>Ujian ini terdiri dari <strong>40 soal pilihan ganda</strong> yang diambil secara acak dari bank soal.<br>
+        Waktu pengerjaan: <strong>60 menit</strong>. Nilai kelulusan: <strong>70%</strong></p>
+
+        <div class="quiz-stats">
+            <div class="stat-box">
+                <div class="number">40</div>
+                <div class="label">Soal</div>
+            </div>
+            <div class="stat-box">
+                <div class="number">60</div>
+                <div class="label">Menit</div>
+            </div>
+            <div class="stat-box">
+                <div class="number">70%</div>
+                <div class="label">KKM</div>
+            </div>
+        </div>
+
+        <button class="btn-start-quiz" onclick="startQuiz()">🚀 Mulai Ujian</button>
+    </div>
+
+    <!-- Quiz Container -->
+    <div id="quizContainer" style="display:none;">
+        <div class="quiz-progress">
+            <div class="quiz-progress-bar" id="progressBar" style="width:0%"></div>
+        </div>
+        <div id="quizCards"></div>
+        <div class="quiz-nav" id="quizNav">
+            <button class="btn-nav btn-prev" id="btnPrev" onclick="prevQuestion()" disabled>← Sebelumnya</button>
+            <button class="btn-nav btn-next" id="btnNext" onclick="nextQuestion()">Selanjutnya →</button>
+        </div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-screen" id="resultScreen">
+        <div class="result-score-circle">
+            <div class="score-number" id="scoreNumber">0</div>
+            <div class="score-label">/ 100</div>
+        </div>
+
+        <div class="result-message" id="resultMessage">-</div>
+
+        <div class="result-details">
+            <div class="result-detail-box correct">
+                <div class="number" id="correctCount">0</div>
+                <div class="label">✅ Benar</div>
+            </div>
+            <div class="result-detail-box wrong">
+                <div class="number" id="wrongCount">0</div>
+                <div class="label">❌ Salah</div>
+            </div>
+            <div class="result-detail-box empty">
+                <div class="number" id="emptyCount">0</div>
+                <div class="label">⚪ Kosong</div>
+            </div>
+        </div>
+
+        <p style="color:#718096;margin-bottom:1rem;">Waktu: <span id="timeUsed">-</span></p>
+
+        <button class="btn-review" onclick="showReview()">📖 Review Soal Salah</button>
+        <button class="btn-review" style="background:linear-gradient(135deg,#667eea,#764ba2);" onclick="restartQuiz()">🔄 Ujian Lagi</button>
+    </div>
+
+    <!-- Review -->
+    <div id="reviewContainer" style="display:none;">
+        <h2 style="color:var(--primary);margin-bottom:1rem;">❌ Review Soal Salah & Kosong</h2>
+        <div id="reviewCards"></div>
+        <button class="btn-review" onclick="backToResult()">← Kembali ke Hasil</button>
+    </div>
+</div>
+
+<!-- ==================== SECTION: HISTORY ==================== -->
+<div id="history" class="section">
+    <h2 class="section-title">📈 Riwayat Ujian Saya</h2>
+
+    <div class="admin-panel">
+        <h2>📊 Riwayat Percobaan Ujian</h2>
+        <div class="history-table-wrap">
+            <table class="history-table" id="historyTable">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Waktu</th>
+                        <th>Benar</th>
+                        <th>Salah</th>
+                        <th>Kosong</th>
+                        <th>Nilai</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                    <tr><td colspan="7" style="text-align:center;color:#a0aec0;">Belum ada riwayat ujian</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== SECTION: ADMIN PANEL ==================== -->
+<div id="admin" class="section">
+    <h2 class="section-title">🔒 Admin Panel - History Akses</h2>
+
+    <div class="admin-panel">
+        <h2>📡 Data Akses Pengguna</h2>
+        <p style="color:#718096;font-size:0.9rem;margin-bottom:1rem;">
+            Berikut adalah log akses yang tercatat di perangkat ini. Data meliputi: waktu akses, username, role, IP address, dan device info.
+        </p>
+
+        <div class="stats-grid" id="adminStats">
+            <div class="stats-card">
+                <h3 id="totalAccess">0</h3>
+                <p>Total Akses</p>
+            </div>
+            <div class="stats-card">
+                <h3 id="uniqueUsers">0</h3>
+                <p>User Unik</p>
+            </div>
+            <div class="stats-card">
+                <h3 id="adminCount">0</h3>
+                <p>Login Admin</p>
+            </div>
+            <div class="stats-card">
+                <h3 id="todayAccess">0</h3>
+                <p>Akses Hari Ini</p>
+            </div>
+        </div>
+
+        <div class="history-table-wrap">
+            <table class="history-table" id="accessTable">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Waktu</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>IP Address</th>
+                        <th>Device/Browser</th>
+                    </tr>
+                </thead>
+                <tbody id="accessBody">
+                    <tr><td colspan="6" style="text-align:center;color:#a0aec0;">Memuat data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <button class="btn-export" onclick="exportCSV()">📥 Export CSV</button>
+        <button class="btn-clear" onclick="clearHistory()">🗑️ Hapus Semua Data</button>
+    </div>
+</div>
+
+<script>
+// ==================== USER DATABASE ====================
+const USERS = {
+    'admin': { pass: 'admin123', role: 'admin', name: 'Administrator' },
+    'mhs1': { pass: 'pass123', role: 'mahasiswa', name: 'Mahasiswa 1' },
+    'mhs2': { pass: 'pass123', role: 'mahasiswa', name: 'Mahasiswa 2' },
+    'mhs3': { pass: 'pass123', role: 'mahasiswa', name: 'Mahasiswa 3' },
+    'guest': { pass: 'guest123', role: 'tamu', name: 'Tamu' },
+    'dokter': { pass: 'dokter123', role: 'mahasiswa', name: 'Dokter Muda' }
+};
+
+let currentUser = null;
+let currentRole = null;
+let userIP = 'Detecting...';
+
+// ==================== IP DETECTION ====================
+async function detectIP() {
+    try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        userIP = data.ip;
+    } catch(e) {
+        userIP = 'Local/Unknown';
+    }
+}
+detectIP();
+
+// ==================== LOGIN SYSTEM ====================
+function doLogin() {
+    const user = document.getElementById('loginUser').value.trim().toLowerCase();
+    const pass = document.getElementById('loginPass').value;
+    const role = document.getElementById('loginRole').value;
+    const error = document.getElementById('loginError');
+
+    if (!USERS[user] || USERS[user].pass !== pass) {
+        error.style.display = 'block';
+        return;
+    }
+
+    // Kalau pilih admin tapi bukan admin
+    if (role === 'admin' && USERS[user].role !== 'admin') {
+        error.textContent = 'Anda tidak memiliki hak akses Admin!';
+        error.style.display = 'block';
+        return;
+    }
+
+    currentUser = user;
+    currentRole = USERS[user].role;
+
+    // Simpan session
+    localStorage.setItem('atlas6e_user', user);
+    localStorage.setItem('atlas6e_role', currentRole);
+    localStorage.setItem('atlas6e_name', USERS[user].name);
+
+    // Log akses
+    logAccess(user, currentRole);
+
+    // UI
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appHeader').style.display = 'flex';
+    document.getElementById('navContainer').style.display = 'block';
+    document.getElementById('userBadge').textContent = '👤 ' + USERS[user].name;
+    document.getElementById('welcomeName').textContent = USERS[user].name;
+
+    // Admin-only nav
+    if (currentRole !== 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+    }
+
+    // Load stats
+    loadUserStats();
+    loadHistoryTable();
+    if (currentRole === 'admin') loadAccessTable();
+
+    setTimeout(() => {
+        document.getElementById('loginScreen').style.display = 'none';
+    }, 500);
+}
+
+function doLogout() {
+    localStorage.removeItem('atlas6e_user');
+    localStorage.removeItem('atlas6e_role');
+    localStorage.removeItem('atlas6e_name');
+    location.reload();
+}
+
+// Auto-login kalau sudah login sebelumnya
+window.addEventListener('load', () => {
+    const savedUser = localStorage.getItem('atlas6e_user');
+    const savedRole = localStorage.getItem('atlas6e_role');
+    if (savedUser && USERS[savedUser]) {
+        document.getElementById('loginUser').value = savedUser;
+        document.getElementById('loginRole').value = savedRole;
+    }
+});
+
+// ==================== ACCESS LOGGING ====================
+function logAccess(username, role) {
+    const logs = JSON.parse(localStorage.getItem('atlas6e_access') || '[]');
+    const entry = {
+        time: new Date().toLocaleString('id-ID'),
+        username: username,
+        role: role,
+        ip: userIP,
+        device: navigator.userAgent.substring(0, 80)
+    };
+    logs.unshift(entry);
+    localStorage.setItem('atlas6e_access', JSON.stringify(logs));
+}
+
+// ==================== NAVIGATION ====================
+function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    window.scrollTo(0, 0);
+
+    if (id === 'admin' && currentRole === 'admin') loadAccessTable();
+    if (id === 'history') loadHistoryTable();
+}
+
+// ==================== QUIZ BANK ====================
+const QUIZ_BANK = [
+    { q: "Indikasi mutlak kontraindikasi Lumbar Puncture adalah?", options: ["Trombositopeni","Impendesi hernia otak","Infeksi kulit","Demam tinggi"], correct: 1, explain: "Impendesi hernia otak adalah kontraindikasi mutlak LP karena bisa memicu tonsilar herniation." },
+    { q: "CT scan pertama pada emergensi stroke harus?", options: ["Dengan kontras","Tanpa kontras","MRI","Angiografi"], correct: 1, explain: "CT non-kontras adalah gold standard pertama untuk menyingkirkan perdarahan sebelum trombolisis." },
+    { q: "Definisi TIA (Transient Ischemic Attack)?", options: ["Stroke dengan defisit >24 jam","Defisit neurologis yang membaik <24 jam","Perdarahan otak ringan","Emboli yang tidak terdeteksi"], correct: 1, explain: "TIA adalah defisit neurologis sementara dengan resolusi <24 jam (biasanya <1 jam), tanpa infark pada imaging." },
+    { q: "Klasifikasi kejang ILAE 2017: semua anggota gerak terkena disebut?", options: ["Fokal motor","Generalized motor","Partial complex","Absence"], correct: 1, explain: "Semua anggota gerak terkena = generalized onset. Dengan kontraksi otot = motor seizure." },
+    { q: "Status Epileptikus didefinisikan sebagai kejang >?", options: ["1 menit","5 menit","15 menit","30 menit"], correct: 1, explain: "ILAE 2015: Status Epileptikus = kejang >5 menit ATAU berulang tanpa recovery kesadaran penuh." },
+    { q: "Obat first-line untuk tremor aksi (essential tremor)?", options: ["Triheksifenidil","Propranolol","Levodopa","Pramipeksol"], correct: 1, explain: "Propranolol (beta-blocker) adalah obat first-line dengan evidence A untuk essential tremor." },
+    { q: "Vertigo yang dipicu perubahan posisi kepala dan berlangsung singkat (detik-menit)?", options: ["Meniere disease","BPPV","Vestibular neuritis","Stroke posterior"], correct: 1, explain: "BPPV = paroksimal positional vertigo. Dipicu posisi, durasi singkat, nistagmus fatigable." },
+    { q: "Pemeriksaan penunjang diagnosis epilepsi adalah?", options: ["EMG","EEG","CT scan","Angiografi"], correct: 1, explain: "EEG merekam aktivitas listrik otak dan merupakan gold standard untuk diagnosis epilepsi." },
+    { q: "Cairan otak xantochromic (kuning kental) menunjukkan?", options: ["Meningitis bakteri","Meningitis viral","Meningitis TB","SAH akut"], correct: 2, explain: "LCS xantochromic dengan protein sangat tinggi dan spiderweb clot adalah ciri khas meningitis TB." },
+    { q: "Hematoma epidural pada CT scan berbentuk?", options: ["Sabit/crescent","Lensa/bikonveks","Irregular","Diffus"], correct: 1, explain: "EDH berbentuk lentiform/bikonveks karena terbatas oleh sutura tengkorak." },
+    { q: "Pusat kesadaran manusia terletak di?", options: ["Hippocampus","Thalamus","Korteks","Serebelum"], correct: 1, explain: "Thalamus merupakan pusat kesadaran melalui ARAS (Ascending Reticular Activating System)." },
+    { q: "Gangguan keseimbangan + bicara pelo menunjukkan lesi di?", options: ["Korteks motorik","Serebelum","Thalamus","Internal capsule"], correct: 1, explain: "Serebelum mengontrol koordinasi gerak dan bicara (dysarthria)." },
+    { q: "Myastenia gravis adalah gangguan di?", options: ["Otot","Reseptor asetilkolin","Neuron motorik","Medulla spinalis"], correct: 1, explain: "MG adalah gangguan autoimun terhadap reseptor asetilkolin di neuromuscular junction." },
+    { q: "Nyeri dari bokong ke ujung ibu jari kaki menunjukkan?", options: ["Mononeuropati","Radikulopati","Polineuropati","Pleksopati"], correct: 1, explain: "Nyeri mengikuti dermatom = radikulopati. Ujung ibu jari kaki = dermatom S1." },
+    { q: "Obat lini pertama episode mania bipolar dengan gejala psikotik?", options: ["Litium saja","Risperidon/Olanzapin","Fluoxetin","Karbamazepin"], correct: 1, explain: "Antipsikotik atipikal (Risperidon, Olanzapin) adalah first-line untuk bipolar dengan gejala psikotik/positif." },
+    { q: "Demensia Alzheimer: obat yang meningkatkan asetilkolin?", options: ["Haloperidol","Rivastigmine","Sertralin","Alprazolam"], correct: 1, explain: "Rivastigmine adalah antikolinesterase inhibitor yang meningkatkan asetilkolin di otak." },
+    { q: "Skizofrenia dengan delusi dikejar/dijahati disebut subtipe?", options: ["Katatonik","Paranoid","Disorganized","Residual"], correct: 1, explain: "Skizofrenia paranoid ditandai dengan delusi persecutory dan halusinasi, fungsi relatif terjaga." },
+    { q: "Fobia sosial (takut keramaian): obat first-line?", options: ["Haloperidol","Sertralin (SSRI)","Litium","Karbamazepin"], correct: 1, explain: "SSRI (Sertralin, Paroxetine, Escitalopram) adalah first-line untuk fobia sosial." },
+    { q: "Tes Romberg: goyang hanya saat mata tertutup menunjukkan?", options: ["Serebellar ataxia","Vestibular perifer/proprioception","Vertigo sentral","Parkinson"], correct: 1, explain: "Romberg positif (goyang saat tutup mata) = gangguan propriosepsi atau vestibular perifer." },
+    { q: "GCS 9 (Eye 2, Verbal 2, Motor 5) menunjukkan kesadaran?", options: ["Compos mentis","Somnolen","Sopor","Koma"], correct: 2, explain: "GCS 9 termasuk Sopor (pensa sedang). Koma = GCS 3-8." },
+    { q: "Tumor dengan Verocay bodies pada histopatologi?", options: ["Astrocytoma","Schwannoma","Meningioma","Oligodendroglioma"], correct: 1, explain: "Schwannoma memiliki ciri khas Verocay bodies dan Antoni A/B areas." },
+    { q: "Meningioma berasal dari?", options: ["Parenkim otak","Meninges (extra-axial)","Neuron","Glia"], correct: 1, explain: "Meningioma adalah tumor extra-axial yang berasal dari meninges (arachnoid cap cells)." },
+    { q: "Terapi definitif meningitis dilakukan setelah?", options: ["LP selesai","Kultur LCS keluar","CT scan","Demam turun"], correct: 1, explain: "Terapi definitif disesuaikan dengan hasil kultur dan sensitivitas antibiotik. Empiris diberikan segera." },
+    { q: "Abses otak: coverage antibiotik harus mencakup?", options: ["Hanya aerob","Hanya anaerob","Polimikrobial (anaerob+aerob)","Hanya Gram negatif"], correct: 2, explain: "Abses otak adalah infeksi polimikrobial yang memerlukan coverage anaerob (Metronidazol) + aerob." },
+    { q: "Stroke embolik kardiogenik paling sering disebabkan oleh?", options: ["Hipertensi","Fibrilasi atrium","Diabetes","Hiperlipidemia"], correct: 1, explain: "FA (fibrilasi atrium) menyebabkan 20-30% stroke iskemik akibat thrombus di atrium kiri." },
+    { q: "Ensefalopati hipoksia akibat CO (asap hitam generator) karena?", options: ["Infeksi virus","Kekurangan oksigen jaringan","Perdarahan otak","Alergi"], correct: 1, explain: "CO mengikat hemoglobin 240x lebih kuat dari O2 → hipoksia jaringan → encephalopathy." },
+    { q: "Parkinson: usia >60 tahun obat pilihan?", options: ["Pramipeksol","Levodopa","Triheksifenidil","Amantadin"], correct: 1, explain: "Usia >60 tahun = Levodopa (gold standard). Usia <60 tahun = agonis dopamin untuk menghindari komplikasi jangka panjang." },
+    { q: "Hoehn-Yahr Stage 3 Parkinson ditandai dengan?", options: ["Unilateral","Bilateral tanpa postural instability","Bilateral + postural instability","Wheelchair-bound"], correct: 2, explain: "Stage 3 = bilateral + mild postural instability, masih independent." },
+    { q: "Afasia Broca (ekspresif) ditandai dengan?", options: ["Bicara lancar tidak bermakna","Bicara pelan effortful, pemahaman terjaga","Tidak bisa mengenal objek","Tidak bisa membaca"], correct: 1, explain: "Broca aphasia = bicara effortful, tidak lancar, tapi pemahaman relatif terjaga." },
+    { q: "Agnosia adalah gangguan?", options: ["Bahasa","Pengenalan","Gerak","Pendengaran"], correct: 1, explain: "Agnosia = tidak bisa mengenali objek/suara/wajah meski indra sensorik normal." },
+    { q: "Motor kiri kena = lesi otak di?", options: ["Hemisfer kiri","Hemisfer kanan","Serebelum","Batang otak"], correct: 1, explain: "Traktus piramidal cross di medulla → motor kiri dikontrol otak kanan (kontralateral)." },
+    { q: "Profilaksis migraine evidence A?", options: ["Ergotamin","Propranolol","Sumatriptan","Asiklovir"], correct: 1, explain: "Propranolol (beta-blocker) adalah obat profilaksis migraine dengan evidence level A." },
+    { q: "Terapi akut migraine tanpa aura?", options: ["Propranolol","Sumatriptan","Amitriptilin","Topiramat"], correct: 1, explain: "Sumatriptan (triptan) adalah first-line terapi akut migraine dengan/tanpa aura." },
+    { q: "Struktur yang merasakan nyeri intrakranial?", options: ["Parenkim otak","Otot kepala dan leher","Ependyma","Pia mater"], correct: 1, explain: "Parenkim otak tidak memiliki nociceptor. Yang nyeri: dura, pembuluh darah besar, otot, saraf." },
+    { q: "Hipokondriasis vs Somatisasi: perbedaan utama?", options: ["Sama saja","Hipokondriasis = takut penyakit, Somatisasi = banyak keluhan fisik","Hipokondriasis = keluhan fisik, Somatisasi = takut","Tidak ada perbedaan"], correct: 1, explain: "Hipokondriasis = preokupasi takut penyakit serius. Somatisasi = banyak keluhan fisik berubah-ubah." },
+    { q: "Amnesia anterograde = tidak bisa ingat?", options: ["Memori lama","Memori baru setelah trauma","Semua memori","Bahasa"], correct: 1, explain: "Anterograde = tidak bisa membentuk memori BARU setelah trauma. Retrograde = tidak ingat memori LAMA." },
+    { q: "Delirium vs Demensia: delirium ditandai dengan?", options: ["Onset gradual","Onset akut + fluktuasi","Tidak ada perubahan","Hanya gangguan memori"], correct: 1, explain: "Delirium = onset akut, fluktuasi, reversible. Demensia = onset gradual, progresif." },
+    { q: "BPPV: manuver terapi definitif?", options: ["Dix-Hallpike","Epley maneuver","Romberg test","Head impulse"], correct: 1, explain: "Epley maneuver adalah manuver reposisi kanalith untuk terapi definitif BPPV (sukses 80-90%)." },
+    { q: "Antidepresan dengan mekanisme 'cheese reaction'?", options: ["SSRI","TCA","MAOI","SNRI"], correct: 2, explain: "MAOI (Monoamine Oxidase Inhibitor) menyebabkan cheese reaction jika dikonsumsi dengan makanan tinggi tiramin (keju, anggur)." },
+    { q: "Internet Gaming Disorder termasuk gangguan?", options: ["Impulse control","Adiksi perilaku","Psikotik","Mood"], correct: 1, explain: "IGD adalah gangguan adiksi perilaku (behavioral addiction) terhadap game online." },
+    { q: "Klaustrofobia adalah fobia terhadap?", options: ["Ketinggian","Ruang tertutup","Binatang","Cahaya"], correct: 1, explain: "Klaustrofobia = takut berlebihan terhadap ruang tertutup/terkurung." },
+    { q: "Anoreksia nervosa: ciri utama?", options: ["Makan berlebihan","Takut gemuk + IMT rendah","Hanya makan sayur","Tidak suka makan"], correct: 1, explain: "Anoreksia nervosa = takut gemuk, restriksi makanan, body image disturbance, IMT di bawah normal." },
+    { q: "GAF (Global Assessment of Functioning) score berkisar?", options: ["0-50","0-100","50-150","100-200"], correct: 1, explain: "GAF score 0-100 mengukur fungsi sosial, okupasional, dan psikologis. Semakin tinggi = semakin baik." },
+    { q: "Demensia vaskular: ciri khas?", options: ["Onset gradual","Stepwise decline + riwayat stroke","Hanya gangguan memori","Usia muda"], correct: 1, explain: "Demensia vaskular = penurunan kognitif stepwise dengan riwayat stroke/TIA dan faktor risiko vaskular." },
+    { q: "Miller Fisher Syndrome: trias?", options: ["Ptosis + diplopia + kelemahan","Ataksia + arefleksia + oftalmoplegia","Fever + rash + lemah","Tremor + rigiditas + bradykinesia"], correct: 1, explain: "Miller Fisher Syndrome (variant GBS) = trias: ataksia, arefleksia, oftalmoplegia. Anti-GQ1b positive." }
+];
+
+// ==================== QUIZ ENGINE ====================
+let quizQuestions = [];
+let currentQIndex = 0;
+let userAnswers = [];
+let quizStartTime = null;
+let quizTimerInterval = null;
+let timeRemaining = 3600; // 60 menit
+
+function startQuiz() {
+    // Acak 40 soal
+    const shuffled = [...QUIZ_BANK].sort(() => Math.random() - 0.5);
+    quizQuestions = shuffled.slice(0, 40);
+    currentQIndex = 0;
+    userAnswers = new Array(40).fill(null);
+    quizStartTime = Date.now();
+    timeRemaining = 3600;
+
+    document.getElementById('quizIntro').style.display = 'none';
+    document.getElementById('quizContainer').style.display = 'block';
+    document.getElementById('resultScreen').classList.remove('active');
+    document.getElementById('reviewContainer').style.display = 'none';
+    document.getElementById('quizTimer').style.display = 'block';
+
+    renderQuizCards();
+    showQuizCard(0);
+    startTimer();
+}
+
+function renderQuizCards() {
+    const container = document.getElementById('quizCards');
+    container.innerHTML = '';
+
+    quizQuestions.forEach((q, idx) => {
+        const card = document.createElement('div');
+        card.className = 'quiz-card';
+        card.id = 'qCard' + idx;
+
+        let optsHTML = '';
+        q.options.forEach((opt, oidx) => {
+            optsHTML += `<div class="quiz-option" onclick="selectOption(${idx}, ${oidx})" id="opt-${idx}-${oidx}">${String.fromCharCode(65+oidx)}. ${opt}</div>`;
+        });
+
+        card.innerHTML = `
+            <div class="quiz-question-number">Soal ${idx+1} dari 40</div>
+            <div class="quiz-question-text">${q.q}</div>
+            <div class="quiz-options">${optsHTML}</div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function showQuizCard(idx) {
+    document.querySelectorAll('.quiz-card').forEach(c => c.classList.remove('active'));
+    document.getElementById('qCard' + idx).classList.add('active');
+
+    // Update progress
+    const pct = ((idx+1) / 40) * 100;
+    document.getElementById('progressBar').style.width = pct + '%';
+
+    // Update nav buttons
+    document.getElementById('btnPrev').disabled = (idx === 0);
+    if (idx === 39) {
+        document.getElementById('btnNext').textContent = '✅ Selesai';
+        document.getElementById('btnNext').className = 'btn-nav btn-finish';
+        document.getElementById('btnNext').onclick = finishQuiz;
+    } else {
+        document.getElementById('btnNext').textContent = 'Selanjutnya →';
+        document.getElementById('btnNext').className = 'btn-nav btn-next';
+        document.getElementById('btnNext').onclick = nextQuestion;
+    }
+
+    // Restore selection
+    if (userAnswers[idx] !== null) {
+        highlightOption(idx, userAnswers[idx]);
+    }
+}
+
+function selectOption(qidx, oidx) {
+    userAnswers[qidx] = oidx;
+    highlightOption(qidx, oidx);
+}
+
+function highlightOption(qidx, oidx) {
+    document.querySelectorAll(`#qCard${qidx} .quiz-option`).forEach((el, i) => {
+        el.classList.toggle('selected', i === oidx);
+    });
+}
+
+function nextQuestion() {
+    if (currentQIndex < 39) {
+        currentQIndex++;
+        showQuizCard(currentQIndex);
+    }
+}
+
+function prevQuestion() {
+    if (currentQIndex > 0) {
+        currentQIndex--;
+        showQuizCard(currentQIndex);
+    }
+}
+
+function startTimer() {
+    clearInterval(quizTimerInterval);
+    quizTimerInterval = setInterval(() => {
+        timeRemaining--;
+        const m = Math.floor(timeRemaining / 60);
+        const s = timeRemaining % 60;
+        document.getElementById('quizTimer').textContent = `⏱️ ${m}:${s.toString().padStart(2,'0')}`;
+
+        if (timeRemaining <= 300) {
+            document.getElementById('quizTimer').classList.add('warning');
+        }
+
+        if (timeRemaining <= 0) {
+            clearInterval(quizTimerInterval);
+            finishQuiz();
+        }
+    }, 1000);
+}
+
+function finishQuiz() {
+    clearInterval(quizTimerInterval);
+    document.getElementById('quizTimer').style.display = 'none';
+    document.getElementById('quizContainer').style.display = 'none';
+    document.getElementById('resultScreen').classList.add('active');
+
+    let correct = 0, wrong = 0, empty = 0;
+    quizQuestions.forEach((q, idx) => {
+        if (userAnswers[idx] === null) empty++;
+        else if (userAnswers[idx] === q.correct) correct++;
+        else wrong++;
+    });
+
+    const score = Math.round((correct / 40) * 100);
+    const timeUsed = Math.floor((Date.now() - quizStartTime) / 1000);
+    const mins = Math.floor(timeUsed / 60);
+    const secs = timeUsed % 60;
+
+    document.getElementById('scoreNumber').textContent = score;
+    document.getElementById('correctCount').textContent = correct;
+    document.getElementById('wrongCount').textContent = wrong;
+    document.getElementById('emptyCount').textContent = empty;
+    document.getElementById('timeUsed').textContent = `${mins}m ${secs}s`;
+
+    const msgEl = document.getElementById('resultMessage');
+    if (score >= 90) { msgEl.textContent = '🌟 EXCELLENT! Luar biasa!'; msgEl.className = 'result-message excellent'; }
+    else if (score >= 80) { msgEl.textContent = '👍 GOOD! Sangat baik!'; msgEl.className = 'result-message good'; }
+    else if (score >= 70) { msgEl.textContent = '✅ PASS! Nilai cukup!'; msgEl.className = 'result-message pass'; }
+    else { msgEl.textContent = '❌ FAIL! Perlu belajar lagi!'; msgEl.className = 'result-message fail'; }
+
+    // Save history
+    saveQuizHistory(correct, wrong, empty, score, `${mins}m ${secs}s`);
+    loadUserStats();
+}
+
+function saveQuizHistory(correct, wrong, empty, score, time) {
+    const history = JSON.parse(localStorage.getItem('atlas6e_history') || '[]');
+    history.unshift({
+        time: new Date().toLocaleString('id-ID'),
+        correct, wrong, empty, score, time,
+        user: currentUser || 'unknown'
+    });
+    localStorage.setItem('atlas6e_history', JSON.stringify(history));
+}
+
+function showReview() {
+    document.getElementById('resultScreen').classList.remove('active');
+    document.getElementById('reviewContainer').style.display = 'block';
+
+    const container = document.getElementById('reviewCards');
+    container.innerHTML = '';
+
+    let hasWrong = false;
+    quizQuestions.forEach((q, idx) => {
+        const isCorrect = userAnswers[idx] === q.correct;
+        const isEmpty = userAnswers[idx] === null;
+
+        if (isCorrect) return; // Hanya tampilkan yang salah/kosong
+        hasWrong = true;
+
+        const card = document.createElement('div');
+        card.className = 'review-card' + (isCorrect ? ' correct' : '');
+
+        const status = isEmpty ? '⚪ KOSONG' : '❌ SALAH';
+        const statusClass = isEmpty ? 'wrong' : 'wrong';
+
+        const userAns = isEmpty ? 'Tidak dijawab' : q.options[userAnswers[idx]];
+        const correctAns = q.options[q.correct];
+
+        card.innerHTML = `
+            <div class="review-header">
+                <span class="quiz-question-number">Soal ${idx+1}</span>
+                <span class="review-status ${statusClass}">${status}</span>
+            </div>
+            <div class="quiz-question-text">${q.q}</div>
+            <div style="margin:0.5rem 0;font-size:0.9rem;">
+                <span style="color:${isEmpty?'#d69e2e':'#e53e3e'};">Jawaban Anda: ${userAns}</span><br>
+                <span style="color:#38a169;">✅ Jawaban Benar: ${correctAns}</span>
+            </div>
+            <div class="review-explanation">
+                <strong>💡 Pembahasan:</strong> ${q.explain}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+    if (!hasWrong) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:3rem;background:linear-gradient(135deg,#c6f6d5,#9ae6b4);border-radius:20px;">
+                <div style="font-size:4rem;margin-bottom:1rem;">🎉</div>
+                <h2 style="color:#22543d;">Sempurna!</h2>
+                <p style="color:#276749;">Semua soal dijawab dengan benar. Tidak ada yang perlu direview!</p>
+            </div>
+        `;
+    }
+}
+
+function backToResult() {
+    document.getElementById('reviewContainer').style.display = 'none';
+    document.getElementById('resultScreen').classList.add('active');
+}
+
+function restartQuiz() {
+    document.getElementById('resultScreen').classList.remove('active');
+    document.getElementById('quizIntro').style.display = 'block';
+}
+
+// ==================== HISTORY TABLES ====================
+function loadHistoryTable() {
+    const history = JSON.parse(localStorage.getItem('atlas6e_history') || '[]');
+    const tbody = document.getElementById('historyBody');
+
+    if (history.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a0aec0;">Belum ada riwayat ujian</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = history.map((h, i) => `
+        <tr>
+            <td>${i+1}</td>
+            <td>${h.time}</td>
+            <td style="color:#38a169;font-weight:700;">${h.correct}</td>
+            <td style="color:#e53e3e;font-weight:700;">${h.wrong}</td>
+            <td style="color:#d69e2e;font-weight:700;">${h.empty}</td>
+            <td style="font-weight:700;">${h.score}</td>
+            <td><span style="padding:0.2rem 0.6rem;border-radius:12px;font-size:0.8rem;font-weight:700;background:${h.score>=70?'#c6f6d5;color:#22543d':'#fed7d7;color:#742a2a'}">${h.score>=70?'LULUS':'BELUM'}</span></td>
+        </tr>
+    `).join('');
+}
+
+function loadUserStats() {
+    const history = JSON.parse(localStorage.getItem('atlas6e_history') || '[]');
+    document.getElementById('statSimulasi').textContent = history.length;
+
+    if (history.length > 0) {
+        const scores = history.map(h => h.score);
+        const avg = Math.round(scores.reduce((a,b)=>a+b,0) / scores.length);
+        const best = Math.max(...scores);
+        document.getElementById('statAvgScore').textContent = avg;
+        document.getElementById('statBestScore').textContent = best;
+    } else {
+        document.getElementById('statAvgScore').textContent = '-';
+        document.getElementById('statBestScore').textContent = '-';
+    }
+}
+
+// ==================== ADMIN PANEL ====================
+function loadAccessTable() {
+    const logs = JSON.parse(localStorage.getItem('atlas6e_access') || '[]');
+    const tbody = document.getElementById('accessBody');
+
+    // Stats
+    document.getElementById('totalAccess').textContent = logs.length;
+    const uniqueUsers = new Set(logs.map(l => l.username)).size;
+    document.getElementById('uniqueUsers').textContent = uniqueUsers;
+    const adminLogins = logs.filter(l => l.role === 'admin').length;
+    document.getElementById('adminCount').textContent = adminLogins;
+    const today = new Date().toLocaleDateString('id-ID');
+    const todayAccess = logs.filter(l => l.time.includes(today)).length;
+    document.getElementById('todayAccess').textContent = todayAccess;
+
+    if (logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#a0aec0;">Belum ada data akses</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = logs.map((l, i) => {
+        const badgeClass = l.role === 'admin' ? 'badge-admin' : (l.role === 'mahasiswa' ? 'badge-user' : 'badge-guest');
+        return `
+            <tr>
+                <td>${i+1}</td>
+                <td>${l.time}</td>
+                <td><strong>${l.username}</strong></td>
+                <td><span class="badge-role ${badgeClass}">${l.role.toUpperCase()}</span></td>
+                <td><code>${l.ip}</code></td>
+                <td style="font-size:0.8rem;color:#718096;">${l.device}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function clearHistory() {
+    if (!confirm('⚠️ Yakin ingin menghapus SEMUA data akses dan riwayat ujian?')) return;
+    localStorage.removeItem('atlas6e_access');
+    localStorage.removeItem('atlas6e_history');
+    loadAccessTable();
+    loadHistoryTable();
+    loadUserStats();
+    alert('✅ Semua data telah dihapus!');
+}
+
+function exportCSV() {
+    const logs = JSON.parse(localStorage.getItem('atlas6e_access') || '[]');
+    if (logs.length === 0) { alert('Tidak ada data untuk diexport'); return; }
+
+    let csv = 'No,Waktu,Username,Role,IP,Device\n';
+    logs.forEach((l, i) => {
+        csv += `${i+1},"${l.time}",${l.username},${l.role},${l.ip},"${l.device}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'history_akses_blok6e_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
